@@ -1,0 +1,80 @@
+Usage Instructions
+Prerequisites
+Python 3.7 or higher
+
+The following Python packages:
+
+librosa (audio analysis & time-stretching)
+
+pydub (audio manipulation & concatenation)
+
+natsort (natural sorting of file names)
+
+numpy (handled by librosa/pydub)
+
+Installation
+Clone or download this repository.
+
+Install the required packages using pip:
+
+bash
+pip install librosa pydub natsort
+Note: librosa may require ffmpeg for some audio formats. On most systems, you can install ffmpeg via your package manager (e.g., apt install ffmpeg on Ubuntu, brew install ffmpeg on macOS, or download from ffmpeg.org).
+
+Command-Line Arguments
+bash
+python audio_srt_sync.py <audio_folder> <srt_path> <output_path>
+Argument	Description
+audio_folder	Directory containing the ordered .wav files (e.g., seg_001.wav, seg_002.wav, …). The order must match the SRT subtitle sequence.
+srt_path	Path to the .srt subtitle file.
+output_path	Desired output path for the synchronized .wav file.
+Example
+Assume you have:
+
+Audio folder: ./audio_clips/ with files part1.wav, part2.wav, part3.wav
+
+SRT file: ./subtitles.srt (containing 3 entries)
+
+You want the final output: ./final_sync.wav
+
+Run:
+
+bash
+python audio_srt_sync.py ./audio_clips ./subtitles.srt ./final_sync.wav
+What the Script Does
+Reads the SRT file – extracts start time, end time, and duration for each subtitle entry.
+
+Loads each audio file – resamples to 44.1 kHz / 16‑bit PCM for consistent timing.
+
+Matches durations exactly:
+
+If an audio clip is shorter than the SRT duration → silence is appended.
+
+If an audio clip is longer → it is time‑stretched (using phase vocoder) to fit precisely.
+
+Inserts gaps – if there is silence between SRT entries (e.g., next start > previous end), silence is added.
+
+Concatenates all processed segments into one continuous WAV file.
+
+Important Notes
+The number of SRT entries must equal the number of audio files – otherwise the script raises an error.
+
+Audio files are processed in natural sort order (e.g., 1.wav, 2.wav, 10.wav instead of lexicographic 1.wav, 10.wav, 2.wav).
+
+The output is a 44.1 kHz, 16‑bit WAV file. You can change the target sample rate by editing TARGET_FRAME_RATE in the script.
+
+If your SRT contains overlapping or non‑chronological timestamps, the script will raise a clear error.
+
+Troubleshooting
+Issue	Likely Solution
+ModuleNotFoundError: No module named 'librosa'	Run pip install librosa pydub natsort again.
+ValueError: Mismatch: X SRT entries vs Y audio files	Make sure every SRT subtitle has a matching audio file.
+Output audio sounds distorted / speeded up	Ensure all input .wav files are standard PCM (not compressed or exotic formats).
+RuntimeError: Duration mismatch	Very rare – may indicate a rounding bug. Try increasing TARGET_FRAME_RATE to 48000 or 96000.
+
+
+
+
+
+
+
